@@ -14,6 +14,7 @@
   "license": "GNU GPL",
   "devDependencies": {
     "@babylonjs/core": "^4.0.3",
+    "@babylonjs/inspector": "^4.0.3",
     "@babylonjs/materials": "^4.0.3",
     "webpack": "^4.41.6",
     "webpack-cli": "^3.3.11",
