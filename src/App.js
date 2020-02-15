@@ -6,11 +6,67 @@ import { FreeCamera } from "@babylonjs/core/Cameras/freeCamera";
 import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import { GridMaterial } from "@babylonjs/materials/grid";
+import { TextBlock } from "@babylonjs/gui";
+import { AdvancedDynamicTexture, Control } from '@babylonjs/gui/2D';
 import "@babylonjs/core/Meshes/meshBuilder";
 import "@babylonjs/core/Debug/debugLayer";
-import "@babylonjs/inspector";
+// import "@babylonjs/inspector";
+import * as BABYLON from '@babylonjs/core/Legacy/legacy';
+import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
+
+class FpsDisplay {
+    constructor(advancedTexture) {
+        const text = new TextBlock();
+        text.text = "Hello world";
+        text.textHorizontalAlignment = Control.HORIZONTAL_ALIGNMENT_RIGHT
+        text.textVerticalAlignment = Control.VERTICAL_ALIGNMENT_TOP;
+        text.color = "#AAA";
+        text.fontSize = 12;
+        this.text = text;
+        advancedTexture.addControl(text);
+    }
+
+    updateFps(engine) {
+        this.text.text = engine.getFps().toFixed() + " fps   ";
+    }
+}
+
+class Terrain {
+    constructor() {
+        this.xs = 1000;
+        this.ys = 1000;
+
+        const z = [];
+        for (let x = 0; x < this.xs; x++) {
+            const xx = [];
+            for (let y = 0; y < this.ys; y++) {
+                xx.push(Math.sin((-7*x + 8 * y) / 1030) * 25 + Math.sin((x + 2 * y) / 100)*3 + Math.sin((3*x - 5 * y) / 10)*0.4 );
+            }
+            z.push(xx);
+        }
+        
+        this.z = z;
+    }
 
 
+    createRibbon(scene) {
+        const pathArray = [];
+        const z = this.z;
+        for (let x = 0; x < this.xs; x++) {
+            const path = [];
+            for (let y = 0; y < this.ys; y++) {
+                path.push(new Vector3(x, z[x][y], y));
+            }
+            pathArray.push(path);
+        }
+
+        const ribbon = MeshBuilder.CreateRibbon("ribbon", { pathArray }, scene);
+        return ribbon;
+    }
+
+}
+
+ 
 class App {
 
     constructor() {
@@ -18,7 +74,13 @@ class App {
         this.engine = new Engine(canvas);
         this.scene = this.createScene(this.engine);
         this.camera = this.createCamera(canvas, this.scene);
-        this.scene.debugLayer.show();
+       
+       // this.scene.debugLayer.show();
+
+        // UI for FPS display
+        const advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI("myUI");
+        this.fpsDisplay = new FpsDisplay(advancedTexture);
+        this.scene.registerBeforeRender(() => this.fpsDisplay.updateFps(this.engine));        
     }
 
     createCamera(canvas, scene) {
@@ -31,34 +93,24 @@ class App {
     createScene(engine) {
         const scene = new Scene(engine);
 
-        // This creates a light, aiming 0,1,0 - to the sky (non-mesh)
-        const light = new HemisphericLight("light1", new Vector3(0, 1, 0), scene);
-
-        // Default intensity is 1. Let's dim the light a small amount
+        const light = new HemisphericLight("light1", new Vector3(0, 10, 0), scene);
         light.intensity = 0.7;
 
-        // Create a grid material
         const material = new GridMaterial("grid", scene);
 
-        // Our built-in 'sphere' shape. Params: name, subdivs, size, scene
-        const sphere = Mesh.CreateSphere("sphere1", 16, 2, scene);
-
-        // Move the sphere upward 1/2 its height
+        const sphere = Mesh.CreateSphere("sphere1", 16, 4, scene);
         sphere.position.y = 2;
-
-        // Affect a material
+        sphere.position.x = 0;
         sphere.material = material;
 
-        // Our built-in 'ground' shape. Params: name, width, depth, subdivs, scene
-        const ground = Mesh.CreateGround("ground1", 20, 20, 5, scene);
-
-        // Affect a material
-        ground.material = material;
+        this.terrain = new Terrain();
+        const ribbon = this.terrain.createRibbon(scene);
+        ribbon.material = material;
 
         return scene;
     }
 
-    start() {        
+    start() {
         this.engine.runRenderLoop(() => {
             this.scene.render();
         });
