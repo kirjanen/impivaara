@@ -1,64 +1,46 @@
 import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
 import { Vector3 } from "@babylonjs/core/Maths/math";
-
+import HeighMap from "./HeighMap";
 
 
 class Terrain {
 
     constructor() {
-        const xs = 1024;
-        const zs = 1024;
-        const h = new Array(xs * zs);
-        h.fill(1.0);
 
-        /*
-        for (let x = 0; x < xs; x++) {            
-            for (let z = 0; z < zs; z++) {
-                h[x+z*xs] = Math.sin((-7 * x + 8 * z) / 1000) * 25 + Math.sin((-3 * x + 2 * z) / 100) * 7 + Math.sin((3 * x - 5 * z) / 90) * 6 + Math.sin((-3 * x + 2 * z) / 10) * 0.23 + Math.sin((3 * x - 5 * z) / 9) * 0.3;
-            }            
-        } 
-        */
+        const hm32 = new HeighMap(32, 32);
+        hm32.randomize();
+        hm32.setEdge(0.5);        
+        hm32.smooth(5);
+        hm32.multiply(15.0);
 
-        const rnda = 100.0;
+        const hm128 = new HeighMap(128, 128);
+        hm128.randomize();
+        hm128.setEdge(0.5);
+        hm128.multiply(2.0);        
+        hm128.addHeightMap(hm32);        
+        hm128.smooth(5);
+        hm32.multiply(3.0);        
 
-        // High precision random;
-        for (let x = 0; x < xs; x++) {
-            for (let z = 0; z < zs; z++) {
-                h[x + z * xs] = Math.random() * rnda;
-            }
-        }
+        const hm = new HeighMap(1024, 1024);
+        hm.randomize();
+        hm.setEdge(0.5);        
+        hm.multiply(0.4);        
+        hm.addHeightMap(hm128);        
+        hm.smooth(6);
+        hm.multiply(10.0);
 
-        // Set edges to constant low
-        for (let x = 0; x < xs; x++) {
-            h[x + (zs - 1) * xs] = rnda / 2.0;
-            h[x] = rnda / 2.0;
-        }
-        for (let z = 0; z < zs; z++) {
-            h[z * xs] = rnda / 2.0;
-            h[(xs - 1) + z * xs] = rnda / 2.0;
-        }
-
-        // Smooth
-        for (let i = 0; i < 40; i++) {
-            for (let x = 1; x < xs - 1; x++) {
-                for (let z = 1; z < zs - 1; z++) {
-                    h[x + z * xs] = (h[x - 1 + z * xs] + h[x + 1 + z * xs] + h[x + (z - 1) * xs] + h[x - 1 + (z + 1) * xs] + 4 * h[x + z * xs]) / 8.0;
-                }
-            }
-        }
-
-        this.xs = xs;
-        this.zs = zs;
-        this.h = h;
+        this.hm = hm;
     }
 
     createRibbon(scene) {
         const pathArray = [];
-        const { xs, zs, h } = this;
+        const xs = this.hm.getXsize();
+        const zs = this.hm.getZsize();
+
         for (let x = 0; x < xs; x++) {
             const path = [];
             for (let z = 0; z < zs; z++) {
-                path.push(new Vector3(x, h[x + z * xs], z));
+                path.push(new Vector3(x, this.hm.get(x, z), z));
             }
             pathArray.push(path);
         }
@@ -68,12 +50,7 @@ class Terrain {
     }
 
     getY(x, z) {
-        const xp = Math.floor(x);
-        const zp = Math.floor(z);
-        if ((xp >= 0) && (xp < this.xs) && (zp >= 0) && (zp < this.zs))
-            return 2+this.h[xp + zp * this.xs];
-        else
-            return 52.0;
+        return this.hm.getY(x, z);       
     }
 
 
