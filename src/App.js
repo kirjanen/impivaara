@@ -11,8 +11,12 @@ import { AdvancedDynamicTexture, Control } from '@babylonjs/gui/2D';
 import "@babylonjs/core/Meshes/meshBuilder";
 import "@babylonjs/core/Debug/debugLayer";
 // import "@babylonjs/inspector";
-import * as BABYLON from '@babylonjs/core/Legacy/legacy';
 import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
+
+import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial';
+import { FireProceduralTexture } from '@babylonjs/procedural-textures/fire/fireProceduralTexture';
+import { GrassProceduralTexture } from '@babylonjs/procedural-textures/grass/grassProceduralTexture';
+import { Texture } from "@babylonjs/core/Materials/Textures/texture";
 
 class FpsDisplay {
     constructor(advancedTexture) {
@@ -40,7 +44,7 @@ class Terrain {
         for (let x = 0; x < this.xs; x++) {
             const xx = [];
             for (let y = 0; y < this.ys; y++) {
-                xx.push(Math.sin((-7*x + 8 * y) / 1030) * 25 + Math.sin((x + 2 * y) / 100)*3 + Math.sin((3*x - 5 * y) / 10)*0.4 );
+                xx.push(Math.sin((-7*x + 8 * y) / 1000) * 25 + Math.sin((-3 * x + 2 * y) / 100)*7 + Math.sin((3*x - 5 * y) / 90)*6 + Math.sin((-3 * x + 2 * y) / 10)*0.23 + Math.sin((3*x - 5 * y) / 9)*0.3  );
             }
             z.push(xx);
         }
@@ -64,6 +68,8 @@ class Terrain {
         return ribbon;
     }
 
+
+
 }
 
  
@@ -80,7 +86,20 @@ class App {
         // UI for FPS display
         const advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI("myUI");
         this.fpsDisplay = new FpsDisplay(advancedTexture);
-        this.scene.registerBeforeRender(() => this.fpsDisplay.updateFps(this.engine));        
+        
+        
+        //this.scene.registerBeforeRender(() => this.camera.y = 30);        
+        this.scene.registerBeforeRender(() => {
+            this.fpsDisplay.updateFps(this.engine);
+            this.camera.y = 30;
+        });        
+
+ 
+        
+
+        //camera.position.y = terrain.getHeightFromMap(camera.position.x, camera.position.z) + 2.0;                
+
+
     }
 
     createCamera(canvas, scene) {
@@ -89,6 +108,17 @@ class App {
         camera.attachControl(canvas, true);
         return camera;
     }
+
+    createSammalMaterial(scene) {
+        const stdMaterial = new StandardMaterial("material", scene);
+        const terrainTexture = new Texture("./sammal.jpeg", scene);        
+        terrainTexture.uScale = 1024.0;
+        terrainTexture.vScale = 1024.0;                
+        stdMaterial.ambientTexture = terrainTexture;    
+        stdMaterial.diffuseTexture = terrainTexture;    
+        return stdMaterial;            
+    }
+
 
     createScene(engine) {
         const scene = new Scene(engine);
@@ -105,8 +135,7 @@ class App {
 
         this.terrain = new Terrain();
         const ribbon = this.terrain.createRibbon(scene);
-        ribbon.material = material;
-
+        ribbon.material = this.createSammalMaterial(scene);
         return scene;
     }
 

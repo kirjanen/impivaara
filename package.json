@@ -13,14 +13,17 @@
   "author": "",
   "license": "GNU GPL",
   "devDependencies": {
-    "@babylonjs/inspector": "^4.0.3",
     "webpack": "^4.41.6",
+    "webpack-bundle-analyzer": "^3.6.0",
     "webpack-cli": "^3.3.11",
     "webpack-dev-server": "^3.10.3"
   },
   "dependencies": {
     "@babylonjs/core": "^4.0.3",
     "@babylonjs/gui": "^4.0.3",
-    "@babylonjs/materials": "^4.0.3"
-  }
+    "@babylonjs/inspector": "^4.0.3",
+    "@babylonjs/materials": "^4.0.3",
+    "@babylonjs/procedural-textures": "^4.0.3"
+  },
+  "sideEffects": false
 }
