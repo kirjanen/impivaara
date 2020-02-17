@@ -19,24 +19,9 @@ import { GrassProceduralTexture } from '@babylonjs/procedural-textures/grass/gra
 import { Texture } from "@babylonjs/core/Materials/Textures/texture";
 
 import Terrain from './Terrain'
+import FpsDisplay from './FpsDisplay'
 import { CubeTexture } from "@babylonjs/core/Materials/Textures/cubeTexture";
 
-class FpsDisplay {
-    constructor(advancedTexture) {
-        const text = new TextBlock();
-        text.text = "Hello world";
-        text.textHorizontalAlignment = Control.HORIZONTAL_ALIGNMENT_RIGHT
-        text.textVerticalAlignment = Control.VERTICAL_ALIGNMENT_TOP;
-        text.color = "#AAA";
-        text.fontSize = 12;
-        this.text = text;
-        advancedTexture.addControl(text);
-    }
-
-    updateFps(engine) {
-        this.text.text = engine.getFps().toFixed() + " fps   ";
-    }
-}
 
 
 class App {
@@ -51,25 +36,25 @@ class App {
         // this.scene.debugLayer.show();
 
         // UI for FPS display
+        this.fpsDisplay = new FpsDisplay();
         const advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI("myUI");
-        this.fpsDisplay = new FpsDisplay(advancedTexture);
+        advancedTexture.addControl(this.fpsDisplay.getControl());
 
         this.scene.registerBeforeRender(() => this.camera.position.y = this.cameraY());
         this.scene.registerBeforeRender(() => this.fpsDisplay.updateFps(this.engine));
     }
 
-    cameraY()
-    {
+    cameraY() {
         const py = this.lastCameraY;
         const cy = this.terrain.getY(this.camera.position.x, this.camera.position.z);
         const d = cy - py;
-        const y = py + d / 5.0;
+        const y = py + d / 4.0;
         this.lastCameraY = y;
         return 2.0 + y;
     }
 
     createCamera(canvas, scene) {
-        const camera = new FreeCamera("camera1", new Vector3(0, 5, -10), scene);
+        const camera = new FreeCamera("camera1", new Vector3(500, 500, 500), scene);
         camera.setTarget(Vector3.Zero());
         camera.attachControl(canvas, true);
         return camera;
@@ -86,12 +71,12 @@ class App {
     }
 
     createSkyBox(scene) {
-        const skybox = MeshBuilder.CreateBox("skyBox", {size:10000.0}, scene)
+        const skybox = MeshBuilder.CreateBox("skyBox", { size: 10000.0 }, scene)
         const skyMaterial = new StandardMaterial("skyBox", scene);
         skyMaterial.backFaceCulling = false;
         skyMaterial.disableLighting = true;
         skybox.material = skyMaterial;
-        skybox.infiniteDistance = true;        
+        skybox.infiniteDistance = true;
         skyMaterial.disableLighting = true;
         skyMaterial.reflectionTexture = new CubeTexture("sky", scene);
         skyMaterial.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
@@ -101,18 +86,10 @@ class App {
     createScene(engine) {
         const scene = new Scene(engine);
 
-        const light = new HemisphericLight("light1", new Vector3(0, 10, 0), scene);
+        const light = new HemisphericLight("light1", new Vector3(50, 100, 5), scene);
         light.intensity = 0.7;
 
-        const material = new GridMaterial("grid", scene);
-
-        const sphere = Mesh.CreateSphere("sphere1", 16, 4, scene);
-        sphere.position.y = 2;
-        sphere.position.x = 0;
-        sphere.material = material;
-
         this.createSkyBox(scene);
-
         this.terrain = new Terrain();
         const ribbon = this.terrain.createRibbon(scene);
         ribbon.material = this.createSammalMaterial(scene);
