@@ -6,7 +6,13 @@ import "@babylonjs/loaders/glTF";
 import "@babylonjs/loaders/glTF";
 import "@babylonjs/core/Loading/Plugins/babylonFileLoader";
 import { Scene } from "@babylonjs/core/scene";
-import { Vector3, Color3, Axis, Space } from "@babylonjs/core/Maths/math";
+import {
+  Vector3,
+  Color3,
+  Axis,
+  Space,
+  Plane
+} from "@babylonjs/core/Maths/math";
 import { FreeCamera } from "@babylonjs/core/Cameras/freeCamera";
 import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
 import { SpotLight } from "@babylonjs/core/Lights/spotLight";
@@ -29,6 +35,8 @@ import FpsDisplay from "./FpsDisplay";
 import PositionDisplay from "./PositionDisplay";
 import { CubeTexture } from "@babylonjs/core/Materials/Textures/cubeTexture";
 import LoadingDisplay from "./loadingDisplay";
+import { DynamicTexture } from "@babylonjs/core/Materials/Textures/dynamicTexture";
+import { MirrorTexture } from "@babylonjs/core/Materials/Textures/mirrorTexture";
 
 class App {
   constructor() {
@@ -51,7 +59,7 @@ class App {
     advancedTexture.addControl(this.posDisplay.getControl());
     advancedTexture.addControl(this.loadingDipslay.getControl());
 
-    var sphere2 = MeshBuilder.CreateSphere(
+    const sphere2 = MeshBuilder.CreateSphere(
       "sphere",
       { diameter: 1 },
       this.scene
@@ -83,8 +91,8 @@ class App {
       this.headLight.position.x = this.camera.position.x;
       this.headLight.position.y = this.camera.position.y + 0.1;
       this.headLight.position.z = this.camera.position.z;
- 
-      var target = new Vector3(
+
+      const target = new Vector3(
         sphere2.position.x,
         sphere2.position.y,
         sphere2.position.z
@@ -94,6 +102,16 @@ class App {
 
     this.scene.registerBeforeRender(() => {
       this.limitDistances();
+    });
+
+    this.scene.registerBeforeRender(() => {
+      this.kartta.position.x = this.camera.position.x;
+      this.kartta.position.y = this.camera.position.y;
+      this.kartta.position.z = this.camera.position.z;
+      this.kartta.rotation.z = this.camera.rotation.y; // Kartta pysyy suunnattuna
+      this.kartta.locallyTranslate(new Vector3(0, 0, 1.0));
+      this.kartta.rotation.x = Math.PI / 2.5;
+      this.kartta.rotation.y = this.camera.rotation.y; // Kartta pysyy edessä
     });
 
     this.scene.registerBeforeRender(() => {
@@ -138,6 +156,9 @@ class App {
     const camera = new FreeCamera("camera1", new Vector3(500, 500, 500), scene);
     camera.setTarget(Vector3.Zero());
     camera.attachControl(canvas, true);
+
+    console.log("minZ:", camera.minZ);
+    camera.minZ = 0.5;
     return camera;
   }
 
@@ -154,6 +175,22 @@ class App {
     stdMaterial.diffuseTexture = terrainTexture;
     stdMaterial.specularColor = new Color3(0, 0, 0);
     stdMaterial.bumpTexture = bumpTexture;
+    return stdMaterial;
+  }
+
+  createVesiMaterial(scene) {
+    const stdMaterial = new StandardMaterial("vesi", scene);
+    const bumpTexture = new Texture("./nurmi7.jpg", scene);
+
+    bumpTexture.uScale = 16;
+    bumpTexture.vScale = 16;
+    stdMaterial.diffuseColor = new Color3(0.0, 0.0, 0.1);
+    stdMaterial.specularColor = new Color3(0.5, 0.6, 0.87);
+    stdMaterial.emissiveColor = new Color3(0.0, 0.0, 0.1);
+    stdMaterial.ambientColor = new Color3(1.0, 0.0, 0.0);
+    stdMaterial.specularColor = new Color3(1.0, 1.0, 0.0);
+    //stdMaterial.bumpTexture = bumpTexture;
+
     return stdMaterial;
   }
 
@@ -174,7 +211,120 @@ class App {
       "_nz.jpg"
     ]);
     skyMaterial.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
+
+    skybox.infiniteDistance = true;
+
     return skybox;
+  }
+
+  createKartta(scene) {
+    const paperMaterial = new StandardMaterial("paperiPinta", scene);
+    paperMaterial.bumpTexture = new Texture("10922-normal.jpg", scene);
+    paperMaterial.diffuseTexture = new Texture("kartta.png", scene);
+    paperMaterial.specularColor = new Color3(0.1, 0.1, 0.1);
+
+    const karttaMesh = MeshBuilder.CreatePlane(
+      "plane",
+      { height: 5, width: 5 },
+      scene
+    );
+    karttaMesh.position.y = 100.0;
+    karttaMesh.material = paperMaterial;
+
+    return karttaMesh;
+  }
+
+  createPaper(scene) {
+    const reso = 4096;
+    const multi = 4;
+    const texture = new DynamicTexture("paperiTexture", reso, scene);
+    const ctx = texture.getContext();
+
+    const paperMaterial = new StandardMaterial("paperiPinta", scene);
+    paperMaterial.bumpTexture = new Texture("10922-normal.jpg", scene);
+    paperMaterial.diffuseTexture = texture;
+    paperMaterial.specularColor = new Color3(0.1, 0.1, 0.1);
+
+    const karttaMesh = MeshBuilder.CreatePlane(
+      "plane",
+      { height: 1.4, width: 1.4 },
+      scene
+    );
+    karttaMesh.position.y = 100.0;
+    karttaMesh.material = paperMaterial;
+
+    ctx.fillStyle = "white";
+    ctx.fillRect(0, 0, reso, reso);
+    ctx.beginPath();
+    ctx.moveTo(75 * 2, 25 * 2);
+    ctx.quadraticCurveTo(25 * 2, 25 * 2, 25 * 2, 62.5 * 2);
+    ctx.quadraticCurveTo(25 * 2, 100 * 2, 50 * 2, 100 * 2);
+    ctx.quadraticCurveTo(50 * 2, 120 * 2, 30 * 2, 125 * 2);
+    ctx.quadraticCurveTo(60 * 2, 120 * 2, 65 * 2, 100 * 2);
+    ctx.quadraticCurveTo(125 * 2, 100 * 2, 125 * 2, 62.5 * 2);
+    ctx.quadraticCurveTo(125 * 2, 25 * 2, 75 * 2, 25 * 2);
+    ctx.fillStyle = "white";
+    ctx.fill();
+
+    const hm = this.terrain.hm;
+    const max = hm.getMax();
+    const min = hm.getMin();
+    console.log("max", max);
+    console.log("min", min);
+
+    const vesi = Math.floor((hm.getY(0, 0) - 25) / 5) * 5;
+    this.vesiraja = vesi;
+
+    /*
+    const { xs, zs } = hm;
+    for (let x = 0; x < xs; x++) {
+      for (let z = 0; z < zs; z++) {
+        const y = hm.getY(x, z);
+        const c = (255 * (y - min)) / (max - min);
+
+        if (y >= vesi) ctx.fillStyle = `rgb(${c},${c},${c})`;
+        else ctx.fillStyle = "#22F";
+        ctx.fillRect(multi * x, multi * z, multi, multi);
+      }
+    }
+    */
+
+    const paths = hm.getPaths();
+
+    console.log("Path count", paths.length, paths);
+
+    //ctx.translate(0.5, 0.5);
+
+    for (let j = 0; j < paths.length; j++) {
+      const { height, path } = paths[j];
+
+      if (height > vesi) {
+        ctx.strokeStyle = "#A70";
+        ctx.lineWidth = multi;
+        ctx.beginPath();
+        ctx.moveTo(multi * path[0].x, multi * path[0].z);
+        for (let i = 1; i < path.length; i++) {
+          ctx.lineTo(multi * path[i].x, multi * path[i].z);
+        }
+        ctx.lineTo(multi * path[0].x, multi * path[0].z);
+        ctx.stroke();
+      } else if (height === vesi && path[0].x > 20) {
+        ctx.strokeStyle = "#000";
+        ctx.lineWidth = multi;
+        ctx.beginPath();
+        ctx.moveTo(multi * path[0].x, multi * path[0].z);
+        for (let i = 1; i < path.length; i++) {
+          ctx.lineTo(multi * path[i].x, multi * path[i].z);
+        }
+        ctx.closePath();
+        ctx.stroke();
+        ctx.fillStyle = "#00D";
+        ctx.fill();
+      }
+    }
+    texture.update();
+
+    return karttaMesh;
   }
 
   getObjectConf(scene) {
@@ -261,7 +411,7 @@ class App {
             );
 
             // Rotate all items over Y-axis
-            var angle = 2.0 * Math.PI * Math.random();
+            const angle = 2.0 * Math.PI * Math.random();
             obj.rotate(Axis.Y, angle, Space.WORLD);
             obj.drawDistance = item.drawDistance;
             // Generate locations
@@ -299,11 +449,98 @@ class App {
   createScene(engine) {
     const scene = new Scene(engine);
     this.headLight = this.createHeadLight(scene);
-    this.createSkyBox(scene);
+    this.skybox = this.createSkyBox(scene);
+
     this.terrain = new Terrain();
     const ribbon = this.terrain.createRibbon(scene);
     ribbon.material = this.createSammalMaterial(scene);
+    this.ribbon = ribbon;
     this.createObjects(scene, this.terrain);
+    //this.kartta = this.createKartta(scene);
+    this.kartta = this.createPaper(scene);
+
+    /*
+    const vesiMaterial = this.createVesiMaterial(scene);
+    vesiMaterial.backFaceCulling = false;
+
+    const vedenPinta = MeshBuilder.CreatePlane(
+      "vesi",
+      { height: 2048, width: 2048 },
+      scene
+    );
+    vedenPinta.rotation.x = Math.PI/2;
+    vedenPinta.position.y = this.vesiraja + 20;
+    vedenPinta.material = vesiMaterial; 
+*/
+
+    // Mirror
+    /*
+  const vedenPinta = MeshBuilder.CreatePlane(
+    "vesi",
+    { height: 2048, width: 2048 },
+    scene
+  );
+  vedenPinta.rotation.x = -Math.PI/2;
+  vedenPinta.position.y = this.vesiraja + 20;
+ */
+
+    /*
+  vedenPinta.material = this.createVesiMaterial(scene);; 
+  vedenPinta.material.backFaceCulling = false;
+  */
+
+    /*
+ skyboxMaterial.reflectionTexture = new CubeTexture("PATH TO IMAGES FOLDER/COMMON PART OF NAMES", scene);
+ skyboxMaterial.reflectionTexture.coordinatesMode = BABYLON.Texture.SKYBOX_MODE;
+
+ vedenPinta.material = new StandardMaterial("mirror", scene);
+ vedenPinta.material.backFaceCulling = false;
+ vedenPinta.material.reflectionTexture = new MirrorTexture("mirror", {ratio: 0.5}, scene, true);
+ vedenPinta.material.reflectionTexture.mirrorPlane = new Plane(0, this.vesiraja + 20, 0, 0);
+ vedenPinta.material.reflectionTexture.renderList = [this.skybox];
+ vedenPinta.material.reflectionTexture.level = 1.0;
+ vedenPinta.material.reflectionTexture.adaptiveBlurKernel = 32;
+*/
+
+    /*
+  const mirror = Mesh.CreateBox("Mirror", 1.0, scene);
+  mirror.scaling = new Vector3(2000.0, 0.01, 2000.0);
+  mirror.material = new StandardMaterial("mirror", scene);
+  mirror.material.reflectionTexture = new MirrorTexture("mirror", {ratio: 0.5}, scene, true);
+  mirror.material.reflectionTexture.mirrorPlane = new Plane(0, this.vesiraja + 20, 0, 2.0);
+  mirror.material.reflectionTexture.renderList = [this.skybox, this.ribbon];
+  mirror.material.reflectionTexture.level = 1.0;
+  mirror.material.reflectionTexture.adaptiveBlurKernel = 32;
+  mirror.position = new Vector3(0, this.vesiraja + 20, 0);	
+*/
+
+    const vedenPinta = MeshBuilder.CreatePlane(
+      "vesi",
+      { size: 10000 }, // Älä käytä liian isoa arvoa, tai rantaviiva rupeaa nykimään. (jokin floatin tarkkuusraja, tms?).
+      scene
+    );
+    vedenPinta.rotation.x = Math.PI / 2;
+    vedenPinta.position.y = 0; // this.vesiraja + 20;
+
+    vedenPinta.material = new StandardMaterial("mirrorMat", scene);
+    vedenPinta.material.backFaceCulling = true;
+    vedenPinta.material.diffuseColor = new Color3(0.1, 0.1, 0.25);
+    vedenPinta.material.emissiveColor = new Color3(0.0, 0.0, 0.05);
+    vedenPinta.material.reflectionTexture = new MirrorTexture(
+      "mirrorText",
+      { ratio: 1.0 },
+      scene,
+      true
+    );
+    vedenPinta.material.reflectionTexture.mirrorPlane = new Plane(0, -1, 0, 1);
+    vedenPinta.material.reflectionTexture.renderList = [
+      this.skybox,
+      this.ribbon
+    ];
+    vedenPinta.material.reflectionTexture.level = 0.3;
+
+    vedenPinta.material.reflectionTexture.adaptiveBlurKernel = 32;
+
     return scene;
   }
 

@@ -16,15 +16,32 @@ class Terrain {
     hm128.multiply(2.0);
     hm128.addHeightMap(hm32);
     hm128.smooth(5);
-    hm32.multiply(3.0);
+    hm128.multiply(3.0);
+
+    
+    const hm256 = new HeighMap(256, 256);
+    hm256.randomize();
+    hm256.setEdge(0.5);
+    hm256.multiply(0.5);
+    hm256.addHeightMap(hm128);
+    hm256.smooth(5);
+    hm256.multiply(1.0);
+    
 
     const hm = new HeighMap(1024, 1024);
     hm.randomize();
     hm.setEdge(0.5);
     hm.multiply(0.4);
-    hm.addHeightMap(hm128);
+    hm.addHeightMap(hm256);
     hm.smooth(6);
     hm.multiply(10.0);
+
+
+    // Adjust to that 10% is under zero (water)
+    const max = hm.getMax();
+    const min = hm.getMin();
+
+    hm.decrease(min + 0.3 * (max-min));
 
     this.hm = hm;
   }
@@ -49,6 +66,9 @@ class Terrain {
   getY(x, z) {
     return this.hm.getY(x, z);
   }
+
+  
+
 }
 
 export default Terrain;
