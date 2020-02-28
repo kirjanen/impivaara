@@ -37,6 +37,7 @@ import { CubeTexture } from "@babylonjs/core/Materials/Textures/cubeTexture";
 import LoadingDisplay from "./loadingDisplay";
 import { DynamicTexture } from "@babylonjs/core/Materials/Textures/dynamicTexture";
 import { MirrorTexture } from "@babylonjs/core/Materials/Textures/mirrorTexture";
+import Rata from "./Rata";
 
 class App {
   constructor() {
@@ -272,8 +273,9 @@ class App {
     console.log("max", max);
     console.log("min", min);
 
-    const vesi = Math.floor((hm.getY(0, 0) - 25) / 5) * 5;
-    this.vesiraja = vesi;
+    const vesi = this
+      .vesiraja; /*Math.floor((hm.getY(0, 0) - 25) / 5) * 5;
+    this.vesiraja = vesi;*/
 
     /*
     const { xs, zs } = hm;
@@ -295,33 +297,135 @@ class App {
 
     //ctx.translate(0.5, 0.5);
 
+    // Pirretään käppyrät
     for (let j = 0; j < paths.length; j++) {
       const { height, path } = paths[j];
 
       if (height > vesi) {
-        ctx.strokeStyle = "#A70";
-        ctx.lineWidth = multi;
+        // Ruskeat kokeuskäyrät
+        ctx.strokeStyle = "#BC5E1E"; // PMS 471
+        ctx.lineWidth = multi * 1.4; // 0.14mm
         ctx.beginPath();
         ctx.moveTo(multi * path[0].x, multi * path[0].z);
         for (let i = 1; i < path.length; i++) {
           ctx.lineTo(multi * path[i].x, multi * path[i].z);
         }
         ctx.lineTo(multi * path[0].x, multi * path[0].z);
+
         ctx.stroke();
       } else if (height === vesi && path[0].x > 20) {
+        // Musta rantaviiva, älä piirrä tämän alapuolisisa käyriä.
         ctx.strokeStyle = "#000";
-        ctx.lineWidth = multi;
+        ctx.lineWidth = multi * 1.8; // 0.18mm
         ctx.beginPath();
         ctx.moveTo(multi * path[0].x, multi * path[0].z);
         for (let i = 1; i < path.length; i++) {
           ctx.lineTo(multi * path[i].x, multi * path[i].z);
         }
         ctx.closePath();
-        ctx.stroke();
-        ctx.fillStyle = "#00D";
+        ctx.fillStyle = "#00A3DD"; // PMS 299
         ctx.fill();
+        ctx.stroke();
       }
     }
+
+    /*
+    // Piirä mittakaava viivoitin.
+    ctx.beginPath();
+    ctx.lineWidth = multi * 1.2;
+    ctx.strokeStyle = "#000000";
+
+    ctx.moveTo(multi * 512, multi * 512);
+    ctx.lineTo(multi * 1012, multi * 512);
+    for (let i = 0; i < 6; i++) {
+      ctx.moveTo(multi * (512 + i * 100), multi * 512);
+      ctx.lineTo(multi * (512 + i * 100), multi * 520);
+    }
+    ctx.stroke();
+    */
+
+    // Piirä ratapainatus. Lähtö ja maali ovat samassa listassa.
+    const controls = this.rata.controls;    
+    const kulma120 = 2.0 * Math.PI / 3.0;
+    const kulma240 = 4.0 * Math.PI / 3.0;
+    const kulma360 = 2.0 * Math.PI;
+    ctx.globalAlpha = 0.7;
+    ctx.lineWidth = multi * 3.5; // 0.35mm
+    ctx.fillStyle = ctx.strokeStyle = "#AA00AA";    
+    ctx.font = `${multi * 40}px sans-serif`;  // 4.0mm font
+
+    // Ratipisteet
+    for (let i = 0; i < controls.length; i++) {
+      const x = controls[i].x;
+      const z = controls[i].z;
+
+      if (i == 0) {
+        // Lähtö. TODO: pyöräytä osoittamaan ekaa rastia
+        ctx.beginPath();
+        ctx.moveTo(multi * (x + 35 * Math.cos(kulma120)), multi * (z + 35 * Math.sin(kulma120)));
+        ctx.lineTo(multi * (x + 35 * Math.cos(kulma240)), multi * (z + 35 * Math.sin(kulma240)));
+        ctx.lineTo(multi * (x + 35 * Math.cos(kulma360)), multi * (z + 35 * Math.sin(kulma360)));
+        ctx.lineTo(multi * (x + 35 * Math.cos(kulma120)), multi * (z + 35 * Math.sin(kulma120)));
+        ctx.closePath();        
+        ctx.stroke();   
+      } else if (i === controls.length - 1) {
+        // Maali
+        ctx.beginPath();
+        ctx.arc(
+          multi * x,
+          multi * z,
+          multi * 20.0,  // 4.0mm
+          0,
+          kulma360
+        );
+        ctx.stroke();        
+        ctx.beginPath();
+        ctx.arc(
+          multi * x,
+          multi * z,
+          multi * 30.0, // 6.0mm
+          0,
+          kulma360
+        );
+        ctx.stroke();
+      } else {
+        ctx.beginPath();
+        ctx.arc(
+          multi * x,
+          multi * z,
+          multi * 25.0, // 5.0mm
+          0,
+          kulma360
+        );
+        ctx.stroke();
+
+        ctx.fillText(`${i}`, multi * x + 200, multi * z);
+      }      
+    }
+
+    // Rativäliviivat
+    for (let i = 0; i < controls.length - 1; i++) {
+      const x1 = controls[i].x;
+      const z1 = controls[i].z;
+      const x2 = controls[i+1].x;
+      const z2 = controls[i+1].z;
+
+      const dx = x2 - x1;
+      const dz = z2 - z1;
+      const d = Math.sqrt(dx*dx+dz*dz);
+
+      const x1b = x1 + 40 * dx / d;
+      const z1b = z1 + 40 * dz / d;
+      const x2b = x2 - 40 * dx / d;
+      const z2b = z2 - 40 * dz / d;
+
+      ctx.beginPath();
+      ctx.moveTo(multi * x1b, multi * z1b);
+      ctx.lineTo(multi * x2b, multi * z2b);
+      ctx.stroke();       
+    }
+    ctx.globalAlpha = 1.0;
+
     texture.update();
 
     return karttaMesh;
@@ -452,6 +556,9 @@ class App {
     this.skybox = this.createSkyBox(scene);
 
     this.terrain = new Terrain();
+    this.vesiraja = Math.floor((this.terrain.hm.getY(0, 0) - 25) / 5) * 5;
+    this.rata = new Rata(this.terrain.hm, this.vesiraja);
+
     const ribbon = this.terrain.createRibbon(scene);
     ribbon.material = this.createSammalMaterial(scene);
     this.ribbon = ribbon;
