@@ -34,7 +34,7 @@ class Terrain {
     hm.multiply(0.4);
     hm.addHeightMap(hm256);
     hm.smooth(6);
-    hm.multiply(10.0);
+    hm.multiply(5.0);
 
 
     // Adjust to that 10% is under zero (water)

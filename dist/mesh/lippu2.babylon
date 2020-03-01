@@ -1,0 +1,21 @@
+{"producer":{"name":"Blender","version":"2.79 (sub 0)","exporter_version":"5.4.2","file":"lippu2.babylon"},
+"autoClear":true,"clearColor":[0.0509,0.0509,0.0509],"ambientColor":[0,0,0],"gravity":[0,-9.81,0],
+"materials":[{"name":"lippu2.Material.001","id":"lippu2.Material.001","ambient":[0.8,0.8,0.8],"diffuse":[0.2187,0.2187,0.2187],"specular":[0,0,0],"emissive":[0,0,0],"specularPower":50,"alpha":1,"backFaceCulling":true,"checkReadyOnlyOnce":false,"maxSimultaneousLights":4, 
+"diffuseTexture":{"name":"lippu2.jpg","level":1,"hasAlpha":0,"coordinatesMode":0,"uOffset":0,"vOffset":0,"uScale":1,"vScale":1,"uAng":0,"vAng":0,"wAng":0,"wrapU":1,"wrapV":1,"coordinatesIndex":0}}],
+"multiMaterials":[],
+"skeletons":[],
+"meshes":[{"name":"Cylinder","id":"Cylinder","materialId":"lippu2.Material.001","billboardMode":0,"position":[-0.7706,-1.2211,-3.5177],"rotation":[0,0,0],"scaling":[1,1,1],"isVisible":true,"freezeWorldMatrix":false,"isEnabled":true,"checkCollisions":false,"receiveShadows":false,"tags":""
+,"positions":[0,1,1.4,1.2124,-1,-0.7,0,-1,1.4,1.2124,1,-0.7,-1.2124,-1,-0.7,1.2124,-1,-0.7,-1.2124,1,-0.7,0,-1,1.4,-1.2124,-1,-0.7,0,1,1.4,1.2124,1,-0.7,1.2124,-1,-0.7,1.2124,1,-0.7,-1.2124,1,-0.7,-1.2124,-1,-0.7,-1.2124,1,-0.7,0,1,1.4
+,0,-1,1.4]
+,"normals":[0.866,0,0.5,0.866,0,0.5,0.866,0,0.5,0,0,-1,0,0,-1,0,0,-1,-0.866,0,0.5,-0.866,0,0.5,-0.866,0,0.5,0.866,0,0.5,0.866,0,0.5,0.866,0,0.5,0,0,-1,0,0,-1,0,0,-1,-0.866,0,0.5,-0.866,0,0.5
+,-0.866,0,0.5]
+,"uvs":[0.6719,0.9938,0.3378,0.0041,0.67,0.0045,0.3331,0.9884,0.0048,0.0149,0.3378,0.0041,0.9996,0.9943,0.67,0.0045,0.9987,0.0075,0.6719,0.9938,0.3331,0.9884,0.3378,0.0041,0.3331,0.9884,0.0032,0.9943,0.0048,0.0149,0.9996,0.9943,0.6719,0.9938,0.67,0.0045]
+,"indices":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17]
+,"subMeshes":[{"materialIndex":0,"verticesStart":0,"verticesCount":18,"indexStart":0,"indexCount":18}]
+,"instances":[]}
+],
+"morphTargetManagers":[],
+"cameras":[{"name":"Camera","id":"Camera","position":[7.4811,5.3437,-6.5076],"rotation":[0.4615,-0.8149,0],"fov":0.8576,"minZ":0.1,"maxZ":100,"speed":1,"inertia":0.9,"checkCollisions":false,"applyGravity":false,"ellipsoid":[0.2,0.9,0.2],"cameraRigMode":0,"interaxial_distance":0.0637,"type":"UniversalCamera"}],"activeCamera":"Camera",
+"lights":[{"name":"Lamp","id":"Lamp","type":0,"position":[4.0762,5.9039,1.0055],"intensity":1,"diffuse":[1,1,1],"specular":[1,1,1]}],
+"shadowGenerators":[]
+}
